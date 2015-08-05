@@ -10,6 +10,7 @@
 в минус.
 
 Создан на основе плагина "MagicRule" для LiveStreet 1.0.2
+
 LiveStreet Developers Team
 https://github.com/livestreet/lsplugin-magicrule
 
