@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+    <id>magicrules</id>
+    <name>
+        <lang name="default">Magic Rules</lang>
+    </name>
+    <author>
+        <lang name="default">Alto CMS Team</lang>
+    </author>
+    <homepage>http://altocms.com</homepage>
+    <version>1.0.0</version>
+    <dirname>magicrules</dirname>
+    <requires>
+        <alto>
+            <version>1.1</version>
+        </alto>
+        <system>
+            <php>5.3.0</php>
+        </system>
+    </requires>
+    <description>
+        <lang name="default">Specific rules for voting and add content</lang>
+        <lang name="ru">Специфические правила для голосования и добавления контента</lang>
+    </description>
+</plugin>
