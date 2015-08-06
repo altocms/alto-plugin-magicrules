@@ -29,7 +29,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
     /**
      * Объект маппера
      *
-     * @var  PluginMagicrules_ModuleMain_MapperMain
+     * @var  PluginMagicrules_ModuleRule_MapperRule
      */
     protected $oMapper;
 
@@ -312,7 +312,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
             $sDate = date('Y-m-d H:i:s', time() - $aRule['period']);
             $iCount = $this->GetCountVote($oUser->getId(), $sTarget, $sDate);
             if ($iCount >= $aRule['count']) {
-                $oBlock = Engine::GetEntity('PluginMagicrules_ModuleMain_EntityBlock');
+                $oBlock = Engine::GetEntity('PluginMagicrules_ModuleRule_EntityBlock');
                 $oBlock->setUserId($oUser->getId());
                 $oBlock->setType(self::BLOCK_TYPE_VOTE);
                 $oBlock->setName(isset($aRule['name']) ? $aRule['name'] : '');
@@ -321,9 +321,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
                     $sMsg = $this->_text($aRule['block_msg']);
                     $oBlock->setMsg($sMsg);
                 }
-                $oBlock->setDateBlock(
-                    date('Y-m-d H:i:s', time() + $aRule['block_time'])
-                );
+                $oBlock->setDateBlock(date('Y-m-d H:i:s', time() + $aRule['block_time']));
                 $oBlock->setData(
                     array('direction' => array_values(
                         array_intersect_key(

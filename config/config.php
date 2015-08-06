@@ -121,12 +121,12 @@ $config['rule_allow'] = array(
             // зарегистрировался сутки назад и написал хотя бы 1 топик или комментарий
             array(
                 'registration_time' => 60 * 60 * 24 * 1,
-                'rating'            => 0, //-3,
+                'rating'            => -3,
                 'count_comment'     => 2,
             ),
             array(
                 'registration_time' => 60 * 60 * 24 * 1,
-                'rating'            => 0, //-3,
+                'rating'            => -3,
                 'count_topic'       => 1,
             ),
         ),
