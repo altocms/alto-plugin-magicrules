@@ -41,7 +41,7 @@ class PluginMagicrules_ActionAjax extends PluginMagicrules_Inherits_ActionAjax {
                 return Router::Action('error');
             } else {
                 E::ModuleMessage()->AddErrorSingle(
-                    E::ModuleLang()->Get('plugin.magicrule.check_rule_action_error'),
+                    E::ModuleLang()->Get('plugin.magicrules.check_rule_action_error'),
                     E::ModuleLang()->Get('attention')
                 );
                 return Router::Action('error');
@@ -77,7 +77,7 @@ class PluginMagicrules_ActionAjax extends PluginMagicrules_Inherits_ActionAjax {
                 return Router::Action('error');
             } else {
                 E::ModuleMessage()->AddErrorSingle(
-                    E::ModuleLang()->Get('plugin.magicrule.check_rule_action_error'),
+                    E::ModuleLang()->Get('plugin.magicrules.check_rule_action_error'),
                     E::ModuleLang()->Get('attention')
                 );
                 return Router::Action('error');
@@ -113,7 +113,7 @@ class PluginMagicrules_ActionAjax extends PluginMagicrules_Inherits_ActionAjax {
                 return Router::Action('error');
             } else {
                 E::ModuleMessage()->AddErrorSingle(
-                    E::ModuleLang()->Get('plugin.magicrule.check_rule_action_error'),
+                    E::ModuleLang()->Get('plugin.magicrules.check_rule_action_error'),
                     E::ModuleLang()->Get('attention')
                 );
                 return Router::Action('error');

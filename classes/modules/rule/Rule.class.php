@@ -43,6 +43,15 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
         $this->oMapper = Engine::GetMapper(__CLASS__);
     }
 
+    protected function _text($sText) {
+
+        $sText = (string)$sText;
+        if ($sText && substr($sText, 0, 2) == '{{' && substr($sText, -2) == '}}') {
+            $sText = E::ModuleLang()->Get('plugin.magicrules.' . substr($sText, 2, strlen($sText) - 4));
+        }
+        return $sText;
+    }
+
     /**
      * @param string                $sAction
      * @param ModuleUser_EntityUser $oUser
@@ -58,17 +67,15 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
 
         // * Проверка на наличие блокировок
         list($iBlockType, $sBlockTarget) = $this->GetTypeAndTargetByAction($sAction);
-        if (true !== $mRes = $this->CheckRuleBlock($iBlockType, $sBlockTarget, $oUser, $aParams)) {
-            return $mRes ? $mRes : false;
+        $xResult = $this->CheckRuleBlock($iBlockType, $sBlockTarget, $oUser, $aParams);
+
+        if (true !== $xResult) {
+            return $xResult ? $xResult : false;
         }
 
         // * Проверка на запрещающие правила
-        $sMsg = (string)Config::Get('plugin.magicrule.rule_disallow.' . $sAction . '.msg');
-        if ('NOT_FOUND_LANG_TEXT' != $sMsgLang = E::ModuleLang()->Get($sMsg)) {
-            $sMsg = $sMsgLang;
-        }
         $bSkip = false;
-        $aType = (array)Config::Get('plugin.magicrule.rule_disallow.' . $sAction . '.type');
+        $aType = (array)Config::Get('plugin.magicrules.rule_disallow.' . $sAction . '.type');
         if ($iBlockType == self::BLOCK_TYPE_VOTE
             && isset($aParams['vote_value'])
             && count($aType)
@@ -76,12 +83,13 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
         ) {
             $bSkip = true;
         }
-        $aGroups = (array)Config::Get('plugin.magicrule.rule_disallow.' . $sAction . '.groups');
+        $aGroups = (array)Config::Get('plugin.magicrules.rule_disallow.' . $sAction . '.groups');
         if (!$bSkip && count($aGroups)) {
+            $sMsg = $this->_text(Config::Get('plugin.magicrules.rule_disallow.' . $sAction . '.msg'));
             foreach ($aGroups as $aRule) {
                 $bCheck = true;
-                foreach ($aRule as $sParam => $mValue) {
-                    if (!$this->CheckRuleDisallowActionParam($sParam, $mValue, $oUser, $aParams)) {
+                foreach ($aRule as $sOption => $xValue) {
+                    if (!$this->CheckRuleDisallowActionParam($sOption, $xValue, $oUser, $aParams)) {
                         $bCheck = false;
                         break;
                     }
@@ -93,21 +101,16 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
         }
 
         // * Проверка на разрешающие правила
-        $aGroups = (array)Config::Get('plugin.magicrule.rule.' . $sAction . '.groups');
+        $aGroups = (array)Config::Get('plugin.magicrules.rule_allow.' . $sAction . '.groups');
         if (!count($aGroups)) {
             return true;
         }
-        $sMsg = (string)Config::Get('plugin.magicrule.rule.' . $sAction . '.msg');
-        if ('NOT_FOUND_LANG_TEXT' != $sMsgLang = E::ModuleLang()->Get($sMsg)) {
-            $sMsg = $sMsgLang;
-        }
+        $sMsg = $this->_text(Config::Get('plugin.magicrules.rule_allow.' . $sAction . '.msg'));
+
         foreach ($aGroups as $aRule) {
             $bCheck = true;
-            foreach ($aRule as $sParam => $mValue) {
-                if (!$this->CheckRuleActionParam(
-                    $sParam, $mValue, $oUser, $aParams
-                )
-                ) {
+            foreach ($aRule as $sOption => $xValue) {
+                if (!$this->CheckRuleActionParam($sOption, $xValue, $oUser, $aParams)) {
                     $bCheck = false;
                     break;
                 }
@@ -292,7 +295,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
         $sTarget = $oVote->getTargetType();
         $sType = $this->aVoteMirrow[$oVote->getDirection()];
 
-        $aGroups = (array)Config::Get('plugin.magicrule.block_rule_vote');
+        $aGroups = (array)Config::Get('plugin.magicrules.rule_block_vote');
         foreach ($aGroups as $aRule) {
             if (!in_array($sTarget, $aRule['target'])) {
                 continue;
@@ -315,12 +318,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
                 $oBlock->setName(isset($aRule['name']) ? $aRule['name'] : '');
                 $oBlock->setTarget($sTarget);
                 if (isset($aRule['block_msg'])) {
-                    $sMsg = $aRule['block_msg'];
-                    if ('NOT_FOUND_LANG_TEXT' !=
-                        $sMsgLang = E::ModuleLang()->Get($sMsg)
-                    ) {
-                        $sMsg = $sMsgLang;
-                    }
+                    $sMsg = $this->_text($aRule['block_msg']);
                     $oBlock->setMsg($sMsg);
                 }
                 $oBlock->setDateBlock(
@@ -337,7 +335,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
                 $oBlock->Add();
 
                 // * Прекращаем обход правил
-                if (!Config::Get('plugin.magicrule.processing_block_rule_all')) {
+                if (!Config::Get('plugin.magicrules.processing_block_rule_all')) {
                     break;
                 }
             }

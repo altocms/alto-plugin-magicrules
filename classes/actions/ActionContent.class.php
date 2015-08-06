@@ -30,7 +30,7 @@ class PluginMagicrules_ActionContent extends PluginMagicrules_Inherits_ActionTop
             } else {
                 E::ModuleMessage()->AddErrorSingle(
                     E::ModuleLang()->Get(
-                        'plugin.magicrule.check_rule_action_error'
+                        'plugin.magicrules.check_rule_action_error'
                     ), E::ModuleLang()->Get('attention')
                 );
                 return Router::Action('error');

@@ -41,7 +41,7 @@ class PluginMagicrules_ActionBlog extends PluginMagicrules_Inherits_ActionBlog {
             } else {
                 E::ModuleMessage()->AddErrorSingle(
                     E::ModuleLang()->Get(
-                        'plugin.magicrule.check_rule_action_error'
+                        'plugin.magicrules.check_rule_action_error'
                     ), E::ModuleLang()->Get('attention')
                 );
                 return;
