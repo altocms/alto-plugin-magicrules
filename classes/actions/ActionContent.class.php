@@ -14,7 +14,7 @@
  *----------------------------------------------------------------------------
  */
 
-class PluginMagicrules_ActionContent extends PluginMagicrules_Inherits_ActionTopic {
+class PluginMagicrules_ActionContent extends PluginMagicrules_Inherits_ActionContent {
 
     protected function EventAdd() {
 
@@ -29,9 +29,8 @@ class PluginMagicrules_ActionContent extends PluginMagicrules_Inherits_ActionTop
                 return Router::Action('error');
             } else {
                 E::ModuleMessage()->AddErrorSingle(
-                    E::ModuleLang()->Get(
-                        'plugin.magicrules.check_rule_action_error'
-                    ), E::ModuleLang()->Get('attention')
+                    E::ModuleLang()->Get('plugin.magicrules.check_rule_action_error'),
+                    E::ModuleLang()->Get('attention')
                 );
                 return Router::Action('error');
             }
