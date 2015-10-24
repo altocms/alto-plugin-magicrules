@@ -28,7 +28,7 @@ $config['processing_block_rule_all'] = false;
  * то действие запрещено
  *
  * Список действий:
- * vote_comment, vote_topic, vote_user, create_comment, create_topic
+ * vote_comment, vote_topic, vote_user, create_comment, create_topic, create_wall
  *
  * В параметре msg можно указать сообщение, которое будет отображаться
  * пользователю, можно использовать просто текст или указать ключ из языкового
@@ -72,7 +72,7 @@ $config['rule_disallow'] = array(
  * то действие разрешено
  *
  * Список действий:
- * vote_comment, vote_topic, vote_user, create_comment, create_topic
+ * vote_comment, vote_topic, vote_user, create_comment, create_topic, create_wall
  *
  * В параметре msg можно указать сообщение, которое будет отображаться
  * пользователю, можно использовать просто текст или указать ключ из языкового
@@ -128,6 +128,15 @@ $config['rule_allow'] = array(
                 'registration_time' => 60 * 60 * 24 * 1,
                 'rating'            => -3,
                 'count_topic'       => 1,
+            ),
+        ),
+    ),
+    'create_wall' => array(
+        // Пример: писать на стене можно только пользователям с рейтингом не ниже 3
+        // Текст сообщения не задается, поэтому будет выводится текст по умолчанию
+        'groups' => array(
+            array(
+                'rating'            => 3,
             ),
         ),
     ),

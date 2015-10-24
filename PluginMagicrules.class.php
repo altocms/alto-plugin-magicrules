@@ -29,6 +29,7 @@ class PluginMagicrules extends Plugin {
                 'ActionAjax',
                 'ActionBlog',
                 'ActionContent',
+                'ActionProfile',
             ),
             'module' => array(
                 'ModuleVote' => '_ModuleVote',
