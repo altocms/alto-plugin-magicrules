@@ -29,14 +29,24 @@ class PluginMagicrules_ActionProfile extends PluginMagicrules_Inherits_ActionPro
         }
 
         $xResult = E::Module('PluginMagicrules\Rule')->CheckRuleAction('create_wall', E::User());
+        if (true === $xResult) {
+            $xResult = E::Module('PluginMagicrules\Rule')->CheckRuleCreateAction('wall', $this->oUserCurrent);
+        }
         if ($xResult === true) {
             return parent::EventWallAdd();
         } else {
-            E::ModuleMessage()->AddErrorSingle(
-                E::ModuleLang()->Get('plugin.magicrules.check_rule_action_error'),
-                E::ModuleLang()->Get('attention')
-            );
-            return Router::Action('error');
+            if (is_string($xResult)) {
+                E::ModuleMessage()->AddErrorSingle(
+                    $xResult, E::ModuleLang()->Get('attention')
+                );
+                return Router::Action('error');
+            } else {
+                E::ModuleMessage()->AddErrorSingle(
+                    E::ModuleLang()->Get('plugin.magicrules.check_rule_action_error'),
+                    E::ModuleLang()->Get('attention')
+                );
+                return Router::Action('error');
+            }
         }
     }
 }

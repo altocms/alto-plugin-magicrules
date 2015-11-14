@@ -31,6 +31,9 @@ class PluginMagicrules_ActionBlog extends PluginMagicrules_Inherits_ActionBlog {
 
         $xResult = E::Module('PluginMagicrules\Rule')->CheckRuleAction('create_comment', $this->oUserCurrent);
         if (true === $xResult) {
+            $xResult = E::Module('PluginMagicrules\Rule')->CheckRuleCreateAction('comment', $this->oUserCurrent);
+        }
+        if (true === $xResult) {
             return parent::SubmitComment();
         } else {
             if (is_string($xResult)) {

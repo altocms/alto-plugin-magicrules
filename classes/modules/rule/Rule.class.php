@@ -1,4 +1,5 @@
 <?php
+
 /* ---------------------------------------------------------------------------
  * @Project: Alto CMS
  * @Plugin Name: Magic Rules
@@ -49,53 +50,204 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
         if ($sText && substr($sText, 0, 2) == '{{' && substr($sText, -2) == '}}') {
             $sText = E::ModuleLang()->Get('plugin.magicrules.' . substr($sText, 2, strlen($sText) - 4));
         }
+
         return $sText;
     }
 
     /**
-     * @param string                $sAction
+     * @param $sType
      * @param ModuleUser_EntityUser $oUser
-     * @param array                 $aParams
+     * @return bool|string
+     */
+    public function CheckRuleCreateAction($sType, $oUser) {
+        if ($oUser->isAdministrator()) {
+            return true;
+        }
+
+        $aRules = C::Get('plugin.magicrules.rule_block_create');
+        if (!is_array($aRules) || empty($aRules)) {
+            return TRUE;
+        }
+
+        if (!in_array($sType, array('content', 'comment', 'wall'))) {
+            return TRUE;
+        }
+
+
+        // Получим настрйоки блокировок для создания топика конкретным пользователем
+        foreach ($aRules as $aRule) {
+            if (!in_array($sType, $aRule['target'])) {
+                continue;
+            }
+            if (empty($aRule['block_time'])) {
+                continue;
+            }
+            $aRule['block_time'] = (int)$aRule['block_time'];
+            if (!$aRule['block_time']) {
+                continue;
+            }
+            if (empty($aRule['count'])) {
+                continue;
+            }
+            $aRule['count'] = (int)$aRule['count'];
+            if (!$aRule['count']) {
+                continue;
+            }
+
+            if (empty($aRule['period'])) {
+                continue;
+            }
+            $aRule['period'] = (int)$aRule['period'];
+            if (!$aRule['period']) {
+                continue;
+            }
+            $aRule['rating'] = (int)$aRule['rating'];
+            if ($aRule['rating'] && $oUser && $oUser->getRating() >= $aRule['rating']) {
+                continue;
+            }
+
+            if ($sType == 'content') {
+                // Получим количество топиков за прошедший период
+                $aRule['real_count'] = E::ModuleTopic()->GetCountUsersTopicByTimeLast($oUser, $aRule['period']);
+
+                if ($aRule['real_count'] >= $aRule['count']) {
+                    // Количество топиков за прошедший период достигло предела
+                    // Проверим истёк ли период блокировки
+                    $xResult = E::ModuleTopic()->CheckLastTopicTime($oUser, $aRule['block_time']);
+                    if ($xResult !== TRUE) {
+                        // Срок блокировки ещё не истёк
+                        $sError = E::ModuleLang()->Get("plugin.magicrules." . str_replace(
+                                array('{{', '}}'), array('', ''), $aRule['block_msg']), array(
+                            'h' => $xResult['h'],
+                            'm' => $xResult['m'],
+                            's' => $xResult['s'],
+                        ));
+                        $oBlock = Engine::GetEntity('PluginMagicrules_ModuleRule_EntityBlock');
+                        $oBlock->setUserId($oUser->getId());
+                        $oBlock->setType(self::BLOCK_TYPE_CREATE);
+                        $oBlock->setName(isset($aRule['name']) ? $aRule['name'] : '');
+                        $oBlock->setTarget('topic');
+                        $oBlock->setMsg($sError);
+                        $oBlock->setDateBlock(date('Y-m-d H:i:s', time() + $aRule['block_time']));
+                        $oBlock->setData('***');
+                        $oBlock->Add();
+                        return $sError;
+                    }
+                }
+
+            }
+
+            if ($sType == 'comment') {
+                // Получим количество топиков за прошедший период
+                $aRule['real_count'] = E::ModuleComment()->GetCountUsersCommentByTimeLast($oUser, $aRule['period']);
+
+                if ($aRule['real_count'] >= $aRule['count']) {
+                    // Количество комментариев за прошедший период достигло предела
+                    // Проверим истёк ли период блокировки
+                    $xResult = E::ModuleComment()->CheckLastCommentTime($oUser, $aRule['block_time']);
+                    if ($xResult !== TRUE) {
+                        // Срок блокировки ещё не истёк
+                        $sError = E::ModuleLang()->Get("plugin.magicrules." . str_replace(
+                                array('{{', '}}'), array('', ''), $aRule['block_msg']), array(
+                            'h' => $xResult['h'],
+                            'm' => $xResult['m'],
+                            's' => $xResult['s'],
+                        ));
+                        $oBlock = Engine::GetEntity('PluginMagicrules_ModuleRule_EntityBlock');
+                        $oBlock->setUserId($oUser->getId());
+                        $oBlock->setType(self::BLOCK_TYPE_CREATE);
+                        $oBlock->setName(isset($aRule['name']) ? $aRule['name'] : '');
+                        $oBlock->setTarget('comment');
+                        $oBlock->setMsg($sError);
+                        $oBlock->setDateBlock(date('Y-m-d H:i:s', time() + $aRule['block_time']));
+                        $oBlock->setData('***');
+                        $oBlock->Add();
+                        return $sError;
+                    }
+                }
+
+            }
+
+            if ($sType == 'wall') {
+                // Получим количество топиков за прошедший период
+                $aRule['real_count'] = E::ModuleWall()->GetCountUsersWallByTimeLast($oUser, $aRule['period']);
+
+                if ($aRule['real_count'] >= $aRule['count']) {
+                    // Количество комментариев за прошедший период достигло предела
+                    // Проверим истёк ли период блокировки
+                    $xResult = E::ModuleWall()->CheckLastWallTime($oUser, $aRule['block_time']);
+                    if ($xResult !== TRUE) {
+                        // Срок блокировки ещё не истёк
+                        $sError = E::ModuleLang()->Get("plugin.magicrules." . str_replace(
+                                array('{{', '}}'), array('', ''), $aRule['block_msg']), array(
+                            'h' => $xResult['h'],
+                            'm' => $xResult['m'],
+                            's' => $xResult['s'],
+                        ));
+                        $oBlock = Engine::GetEntity('PluginMagicrules_ModuleRule_EntityBlock');
+                        $oBlock->setUserId($oUser->getId());
+                        $oBlock->setType(self::BLOCK_TYPE_CREATE);
+                        $oBlock->setName(isset($aRule['name']) ? $aRule['name'] : '');
+                        $oBlock->setTarget('wall');
+                        $oBlock->setMsg($sError);
+                        $oBlock->setDateBlock(date('Y-m-d H:i:s', time() + $aRule['block_time']));
+                        $oBlock->setData('***');
+                        $oBlock->Add();
+                        return $sError;
+                    }
+                }
+
+            }
+
+        }
+
+        return TRUE;
+    }
+
+    /**
+     * @param string $sAction
+     * @param ModuleUser_EntityUser $oUser
+     * @param array $aParams
      *
      * @return bool|string
      */
     public function CheckRuleAction($sAction, $oUser, $aParams = array()) {
 
         if ($oUser->isAdministrator()) {
-            return true;
+            return TRUE;
         }
 
         // * Проверка на наличие блокировок
         list($iBlockType, $sBlockTarget) = $this->GetTypeAndTargetByAction($sAction);
         $xResult = $this->CheckRuleBlock($iBlockType, $sBlockTarget, $oUser, $aParams);
 
-        if (true !== $xResult) {
-            return $xResult ? $xResult : false;
+        if (TRUE !== $xResult) {
+            return $xResult ? $xResult : FALSE;
         }
 
         // * Проверка на запрещающие правила
-        $bSkip = false;
+        $bSkip = FALSE;
         $aType = (array)Config::Get('plugin.magicrules.rule_disallow.' . $sAction . '.type');
         if ($iBlockType == self::BLOCK_TYPE_VOTE
             && isset($aParams['vote_value'])
             && count($aType)
             && !in_array($this->aVoteMirrow[$aParams['vote_value']], $aType)
         ) {
-            $bSkip = true;
+            $bSkip = TRUE;
         }
         $aGroups = (array)Config::Get('plugin.magicrules.rule_disallow.' . $sAction . '.groups');
         if (!$bSkip && count($aGroups)) {
             $sMsg = $this->_text(Config::Get('plugin.magicrules.rule_disallow.' . $sAction . '.msg'));
             foreach ($aGroups as $aRule) {
-                $bCheck = true;
+                $bCheck = TRUE;
                 foreach ($aRule as $sOption => $xValue) {
                     if (!$this->CheckRuleDisallowActionParam($sOption, $xValue, $oUser, $aParams)) {
-                        $bCheck = false;
+                        $bCheck = FALSE;
                         break;
                     }
                 }
                 if ($bCheck) {
-                    return $sMsg ? $sMsg : false;
+                    return $sMsg ? $sMsg : FALSE;
                 }
             }
         }
@@ -103,23 +255,24 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
         // * Проверка на разрешающие правила
         $aGroups = (array)Config::Get('plugin.magicrules.rule_allow.' . $sAction . '.groups');
         if (!count($aGroups)) {
-            return true;
+            return TRUE;
         }
         $sMsg = $this->_text(Config::Get('plugin.magicrules.rule_allow.' . $sAction . '.msg'));
 
         foreach ($aGroups as $aRule) {
-            $bCheck = true;
+            $bCheck = TRUE;
             foreach ($aRule as $sOption => $xValue) {
                 if (!$this->CheckRuleActionParam($sOption, $xValue, $oUser, $aParams)) {
-                    $bCheck = false;
+                    $bCheck = FALSE;
                     break;
                 }
             }
             if ($bCheck) {
-                return true;
+                return TRUE;
             }
         }
-        return $sMsg ? $sMsg : false;
+
+        return $sMsg ? $sMsg : FALSE;
     }
 
     /**
@@ -131,22 +284,24 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
 
         $aPath = explode('_', strtolower($sAction));
         if (isset($aPath[0]) && isset($aPath[1])) {
-            $iBlockType = null;
+            $iBlockType = NULL;
             if ($aPath[0] == 'vote') {
                 $iBlockType = self::BLOCK_TYPE_VOTE;
             } elseif ($aPath[0] == 'create') {
                 $iBlockType = self::BLOCK_TYPE_CREATE;
             }
+
             return array($iBlockType, $aPath[1]);
         }
-        return array(null, null);
+
+        return array(NULL, NULL);
     }
 
     /**
-     * @param int                   $iType
-     * @param string                $sTarget
+     * @param int $iType
+     * @param string $sTarget
      * @param ModuleUser_EntityUser $oUser
-     * @param array                 $aParams
+     * @param array $aParams
      *
      * @return bool
      */
@@ -154,9 +309,9 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
 
         $aBlockItems = $this->GetBlockItemsByFilter(
             array(
-                'user_id' => $oUser->getId(),
-                'type' => $iType,
-                'target' => $sTarget,
+                'user_id'       => $oUser->getId(),
+                'type'          => $iType,
+                'target'        => $sTarget,
                 'date_block >=' => date('Y-m-d H:i:s'),
             )
         );
@@ -177,17 +332,18 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
             if ($oBlock->getMsg()) {
                 return $oBlock->getMsg();
             } else {
-                return false;
+                return FALSE;
             }
         }
-        return true;
+
+        return TRUE;
     }
 
     /**
-     * @param string                $sParam
-     * @param mixed                 $xValue
+     * @param string $sParam
+     * @param mixed $xValue
      * @param ModuleUser_EntityUser $oUser
-     * @param array                 $aParams
+     * @param array $aParams
      *
      * @return bool
      */
@@ -195,37 +351,37 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
 
         if ($sParam == 'registration_time') {
             if (time() - strtotime($oUser->getDateRegister()) >= $xValue) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
         if ($sParam == 'rating') {
             if ($oUser->getRating() >= $xValue) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
         if ($sParam == 'skill') {
             if ($oUser->getSkill() >= $xValue) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
         if ($sParam == 'count_comment') {
             if (E::ModuleComment()->GetCountCommentsByUserId($oUser->getId(), 'topic') >= $xValue) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
         if ($sParam == 'count_topic') {
             if (E::ModuleTopic()->GetCountTopicsPersonalByUser($oUser->getId(), 1) >= $xValue) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
         if ($sParam == 'rating_sum_topic') {
@@ -237,9 +393,9 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
                 $iTime = 60 * 60 * 24 * 14;
             }
             if ($this->GetSumRatingTopic($oUser->getId(), date('Y-m-d H:i:s', time() - $iTime)) >= $iRating) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
         if ($sParam == 'rating_sum_comment') {
@@ -251,19 +407,20 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
                 $iTime = 60 * 60 * 24 * 7;
             }
             if ($this->GetSumRatingComment($oUser->getId(), date('Y-m-d H:i:s', time() - $iTime)) >= $iRating) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
-        return false;
+
+        return FALSE;
     }
 
     /**
-     * @param string                $sParam
-     * @param mixed                 $xValue
+     * @param string $sParam
+     * @param mixed $xValue
      * @param ModuleUser_EntityUser $oUser
-     * @param array                 $aParams
+     * @param array $aParams
      *
      * @return bool
      */
@@ -274,12 +431,13 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
                 $xValue = array($xValue);
             }
             if (in_array($oUser->getId(), $xValue)) {
-                return true;
+                return TRUE;
             } else {
-                return false;
+                return FALSE;
             }
         }
-        return false;
+
+        return FALSE;
     }
 
     /**
@@ -290,7 +448,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
     public function CheckForCreateBlockVote($oVote) {
 
         if (!($oUser = E::ModuleUser()->GetUserById($oVote->getVoterId()))) {
-            return false;
+            return FALSE;
         }
         $sTarget = $oVote->getTargetType();
         $sType = $this->aVoteMirrow[$oVote->getDirection()];
@@ -323,12 +481,14 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
                 }
                 $oBlock->setDateBlock(date('Y-m-d H:i:s', time() + $aRule['block_time']));
                 $oBlock->setData(
-                    array('direction' => array_values(
-                        array_intersect_key(
-                            array_flip($this->aVoteMirrow),
-                            array_flip($aRule['type'])
+                    array(
+                        'direction' => array_values(
+                            array_intersect_key(
+                                array_flip($this->aVoteMirrow),
+                                array_flip($aRule['type'])
+                            )
                         )
-                    ))
+                    )
                 );
                 $oBlock->Add();
 
@@ -341,7 +501,7 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
     }
 
     /**
-     * @param int    $iUserId
+     * @param int $iUserId
      * @param string $sTargetType
      * @param string $sDate
      *
@@ -353,23 +513,23 @@ class PluginMagicrules_ModuleRule extends ModuleORM {
     }
 
     /**
-     * @param int  $iUserId
+     * @param int $iUserId
      * @param null $sDate
      *
      * @return int
      */
-    public function GetSumRatingTopic($iUserId, $sDate = null) {
+    public function GetSumRatingTopic($iUserId, $sDate = NULL) {
 
         return $this->oMapper->GetSumRatingTopic($iUserId, $sDate);
     }
 
     /**
-     * @param int  $iUserId
+     * @param int $iUserId
      * @param null $sDate
      *
      * @return int
      */
-    public function GetSumRatingComment($iUserId, $sDate = null) {
+    public function GetSumRatingComment($iUserId, $sDate = NULL) {
 
         return $this->oMapper->GetSumRatingComment($iUserId, $sDate);
     }
