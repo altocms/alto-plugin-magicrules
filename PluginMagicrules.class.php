@@ -33,7 +33,15 @@ class PluginMagicrules extends Plugin {
             ),
             'module' => array(
                 'ModuleVote' => '_ModuleVote',
-            )
+                'ModuleTopic',
+                'ModuleComment',
+                'ModuleWall',
+            ),
+            'mapper' => array(
+                'ModuleTopic_MapperTopic',
+                'ModuleComment_MapperComment',
+                'ModuleWall_MapperWall',
+            ),
         );
 
     /**

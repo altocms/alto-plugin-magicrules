@@ -19,6 +19,10 @@ class PluginMagicrules_ActionContent extends PluginMagicrules_Inherits_ActionCon
     protected function EventAdd() {
 
         $xResult = E::Module('PluginMagicrules\Rule')->CheckRuleAction('create_topic', $this->oUserCurrent);
+        if (true === $xResult) {
+            // Проверка на создание по врмени
+            $xResult = E::Module('PluginMagicrules\Rule')->CheckRuleCreateAction('content', $this->oUserCurrent);
+        }
         if ($xResult === true) {
             return parent::EventAdd();
         } else {
